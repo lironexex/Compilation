@@ -1,0 +1,2 @@
+// comments 5 - unprintable chars 1
+// this single line comment ends due to the appearance of the following unprintable char:  this is not a part of the comment anymore (and it shouldn't be reached)

@@ -1,0 +1,6 @@
+// Integers - DEC_REAL, HEX_FP:
+var num1 = .2 + 8. - 0.2 * .8e-123 + 2.E+001
+var num2 = 0xDeFp+2 -0xabcP+0 +0x123abcp-22
+.2.234.232.256E+125
+00xDefP-2
+0Xabcp+123

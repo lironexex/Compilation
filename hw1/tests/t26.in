@@ -1,0 +1,3 @@
+// comments 6 - unprintable chars 2
+/* this is not a legal multi-line comment since it contains the following unprintable char:  
+thus, an error should be reported */

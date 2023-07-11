@@ -1,0 +1,7 @@
+// Integers - DEC_INT, HEX_INT:
+var num1 = 1 + 0010 + 123 * 0xABC1DEF + 0x0
+var num2 = 0xDeF -100 + 0xabc101c
+0x0000000000101
+0000000000009
+00xDef
+0Xabc

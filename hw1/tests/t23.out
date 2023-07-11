@@ -1,0 +1,4 @@
+1 COMMENT 1
+2 STRING a string contains *zero* or more characters, for example, this is legal:
+3 STRING 
+3 COMMENT 1

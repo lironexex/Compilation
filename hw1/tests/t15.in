@@ -1,0 +1,3 @@
+// illegal strings 6 - illegal escape sequence
+"this is a legal escape sequence: \t"
+"this escape sequence is illegal: \>"

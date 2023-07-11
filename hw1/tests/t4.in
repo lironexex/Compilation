@@ -1,0 +1,8 @@
+// IDs:
+a
+Z
+_compi
+_Z123ab
+_cC1aA
+E1234S
+_one_two_three_    // the last '_' char by itself is not a legal ID

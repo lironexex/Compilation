@@ -1,0 +1,2 @@
+// illegal strings 4 - empty \u escape sequence
+"this is not ok: \u{}"

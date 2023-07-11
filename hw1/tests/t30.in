@@ -1,0 +1,7 @@
+// illegal printable char in a random place (outside of a string):
+
+import UIKit
+var num = 1.0e+6
+var x : String = "some string here!"
+but now we have a random illegal char ~
+// we should not get here

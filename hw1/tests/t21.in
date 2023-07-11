@@ -1,0 +1,13 @@
+// comments 2 - escape sequence inside comments (of both types) have no effect
+
+// for example, this escape sequence: \u{41} is just ignored
+// \u{00000069} \q \U{} \u{} \" \\ \n \r \t 
+/* \u{00000069} \q \U{} \u{}
+ \"
+  \\
+   \n
+    \r
+     \t
+*/ 
+// "this is not technically a string! \u{41} \\ \t \r \n this is all a part of the comment" 
+/* "this is not technically a string! \u{41} \\ \t \r \n this is all a part of the comment" */ 

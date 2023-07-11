@@ -1,0 +1,11 @@
+// comments 1
+
+// this is a legal single-line comment 
+// the is a different single-line comment
+/* this is a multi-line comment spread over a single line */
+/* this is a multi-line comment 
+spread 
+over 
+multiple 
+lines 
+*/

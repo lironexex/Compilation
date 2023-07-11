@@ -1,0 +1,5 @@
+// comments 4 - empty comments
+// the empty single-line comment in the next line is legal:
+//
+//the next empty multi-line comment is also legal:
+/**/

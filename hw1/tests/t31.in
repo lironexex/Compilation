@@ -1,0 +1,3 @@
+// comments 10 - unclosed multi-line comment
+/* this is a closed multi-line comment */
+/* but this multi line comment is unclosed...

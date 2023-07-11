@@ -1,0 +1,2 @@
+/* illegal strings 10 - unclosed string 5 - note that this case appeared *as is* in the FAQ, and since an escape sequence isn't technically formed here only the unclosed string error should be printed */
+"\

@@ -1,0 +1,2 @@
+/* illegal strings 9 - unclosed string 4 - illegal escape sequence followed by unclosed string - note that this case appeared *as is* in the FAQ, and only the 'undefined escape sequence error should be printed' */
+"\u

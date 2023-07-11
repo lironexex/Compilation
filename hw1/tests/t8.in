@@ -1,0 +1,6 @@
+// strings 1
+"this is ok"
+"this is a legal \t string"
+"also legal \n\r\\"
+"we can \"quote\" inside!"
+

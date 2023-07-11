@@ -1,0 +1,3 @@
+// illegal strings 2
+"\u{000041}" // legal 'A'
+"\u{0000041}" //illegal 

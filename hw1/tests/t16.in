@@ -1,0 +1,2 @@
+// illegal strings 7 - unclosed string 2
+"this string ends now"and does not include this"

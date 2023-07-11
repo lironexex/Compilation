@@ -1,0 +1,2 @@
+// illegal strings 1
+"\U{41}"

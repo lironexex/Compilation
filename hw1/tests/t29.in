@@ -1,0 +1,7 @@
+// comments 9 - nested comments 2 - a multi-line comment nested inside a multi-line comment is illegal:
+/* outer comment: 
+some stuff here
+// this is legal
+"were are still ok"
+"still fine \u{412sdfsd}"
+/* illegal nested comment */ */ 

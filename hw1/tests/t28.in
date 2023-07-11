@@ -1,0 +1,11 @@
+// comments 8 - nested comments 1 (note that technically the 'nested' comments in the following cases are just considered plain text)
+
+// this is legal: // note that we are still inside the original comment
+// */ this is also legal */
+/* // this is legal too */
+/* // and this
+// and this 
+*/
+
+// /* note that this is just considered plain text!
+*/

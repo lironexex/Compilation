@@ -1,0 +1,17 @@
+// other tokens:
+import UIKit
+var num : Double = 1.0e+6
+String Int UInt Float Bool Character
+char string int uint float bool character
+let y = 3
+func
+nil
+if 
+else
+return;
+,
+() {} [] = == != < > <= >=
+|| && %
+true false
+->
+:

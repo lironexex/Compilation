@@ -1,0 +1,3 @@
+// illegal strings 5 - unclosed string
+"this string is closed"
+"this string is not closed

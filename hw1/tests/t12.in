@@ -1,0 +1,3 @@
+// illegal strings 3 - unprintable char ascii value in escape sequence
+"\u{7E}" //legal printable char
+"\u{7F}" //illegal - DEL char is unprintable

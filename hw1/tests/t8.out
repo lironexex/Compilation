@@ -1,0 +1,6 @@
+1 COMMENT 1
+2 STRING this is ok
+3 STRING this is a legal 	 string
+4 STRING also legal 
+\
+5 STRING we can "quote" inside!

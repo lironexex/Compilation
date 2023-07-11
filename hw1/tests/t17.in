@@ -1,0 +1,5 @@
+// illegal strings 8 - unclosed string 3
+"this line feed escape sequence is legal: \n"
+"but the line feed char itself is illegal in a string:
+"
+// this won't be reached

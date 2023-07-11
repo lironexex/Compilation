@@ -1,0 +1,3 @@
+//strings 3 - empty string
+"a string contains *zero* or more characters, for example, this is legal:"
+"" // a zero-character string

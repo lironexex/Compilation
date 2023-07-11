@@ -1,0 +1,3 @@
+// comments 7 - double closing patterns for multi-line comment
+/* some comment 
+written here */ */
