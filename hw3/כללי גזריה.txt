@@ -1,0 +1,46 @@
+1.	Program -> Funcs
+2.	Funcs -> epsilon
+3.	Funcs -> FuncDecl Funcs
+4.	FuncDecl -> RetType ID LPAREN Formals RPAREN LBRACE Statements RBRACE
+5.	RetType -> Type
+6.	RetType -> VOID
+7.	Formals -> epsilon
+8.	Formals -> FormalsList
+9.	FormalsList -> FormalDecl
+10.	FormalsList -> FormalDecl COMMA FormalsList
+11.	FormalDecl -> Type ID
+12.	Statements -> Statement
+13.	Statements -> Statements Statement
+14.	Statement -> LBRACE Statements RBRACE
+15.	Statement -> Type ID SC
+16.	Statement -> Type ID ASSIGN Exp SC
+17.	Statement -> ID ASSIGN Exp SC
+18.	Statement -> Call SC
+19.	Statement -> RETURN SC
+20.	Statement -> RETURN Exp SC
+21.	Statement -> IF LPAREN Exp RPAREN Statement
+22.	Statement -> IF LPAREN Exp RPAREN Statement ELSE Statement
+23.	Statement -> WHILE LPAREN Exp RPAREN Statement
+24.	Statement -> WHILE LPAREN Exp RPAREN Statement ELSE Statement
+25.	Statement -> BREAK SC
+26.	Statement -> CONTINUE SC
+27.	Call -> ID LPAREN ExpList RPAREN
+28.	Call -> ID LPAREN RPAREN
+29.	ExpList -> Exp
+30.	ExpList -> Exp COMMA ExpList
+31.	Type -> INT
+32.	Type -> BYTE
+33.	Type -> BOOL
+34.	Exp -> LPAREN Exp RPAREN
+35.	Exp -> Exp BINOP Exp
+36.	Exp -> ID
+37.	Exp -> Call
+38.	Exp -> NUM
+39.	Exp -> NUM B
+40.	Exp -> STRING
+41.	Exp -> TRUE
+42.	Exp -> FALSE
+43.	Exp -> NOT Exp
+44.	Exp -> Exp AND Exp
+45.	Exp -> Exp OR Exp
+46.	Exp -> Exp RELOP Exp

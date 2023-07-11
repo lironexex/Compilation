@@ -1,0 +1,447 @@
+%{
+    #include <iostream>
+    #include <string>
+    #include "hw3.h"
+    using namespace std;
+    SymbolTable sTable;
+    int yyerror(const char * message);
+    extern int yylineno;
+    extern char* yytext;
+    int yylex();
+    %}
+
+%token VOID
+%token INT
+%token BYTE
+%token B
+%token BOOL
+%token TRUE
+%token FALSE
+%token RETURN
+%token IF
+%token ELSE
+%token WHILE
+%token BREAK
+%token CONTINUE
+%token SC
+%token COMMA
+%token LBRACE
+%token RBRACE
+%token ID
+%token NUM
+%token STRING
+%token EF
+
+%right ASSIGN
+%left OR
+%left AND
+%left RELOPEQUALITY
+%nonassoc RELOPRELATION
+%left BINOPADD
+%left BINOPMUL
+%right NOT
+%left RPAREN
+%left LPAREN
+%%
+
+program:        funcs EF{
+    if(!sTable.mainExist()) {
+        output::errorMainMissing();
+        exit(0);
+    }
+    sTable.printScope();
+    exit(0);
+}
+;
+funcs:           {}
+| funcdecl funcs {}
+;
+funcdecl:       rettype ID LPAREN opensc formals RPAREN {
+    sTable.currRetType=$1->type;
+    Id* tmp=dynamic_cast<Id*>($2);
+    if(sTable.isExist($2)) {
+        output:: errorDef(yylineno, tmp->id);
+        exit(0);
+    }
+    sTable.addFunc($1,$2,$5);
+} LBRACE statements RBRACE
+{
+     Id* tmp=dynamic_cast<Id*>($2);
+    sTable.printScope(tmp->id,sTable.preNum);
+    sTable.closeScope();
+    sTable.currRetType=DEFAULTT;
+    sTable.preNum=0;
+}
+;
+rettype:        type {$$=$1;}
+| VOID {$$=new Void();}
+;
+formals:        {$$=new Explist();}
+|formalslist {$$=$1;}
+;
+formalslist:    formaldecl{
+    $$=new Explist($1->type);
+}
+| formaldecl COMMA formalslist {
+    Explist* tmp=dynamic_cast<Explist*>($3);
+    tmp->insert($1->type);
+    $$=$3;
+}
+;
+
+
+formaldecl:     type ID {
+    Id* tmp=dynamic_cast<Id*>($2);
+    if(sTable.isExist($2)){
+        output::errorDef(yylineno, tmp->id);
+         exit(0);
+    }
+    sTable.addArgID($1->type,$2);
+    $$=$1;
+}
+;
+
+statements:
+statement {}
+|statements statement {}
+;
+
+statement:
+open_statement
+|closed_statement
+;
+
+open_statement:
+IF boolexp opensc
+simple_statement closesc {
+	
+
+}
+
+| IF boolexp opensc
+open_statement closesc {
+	
+
+}
+
+| IF boolexp opensc closed_statement closesc
+ELSE opensc open_statement closesc	{
+	
+
+}
+
+| WHILE boolexp whileup opensc open_statement whiledown closesc	{
+	
+
+}
+
+| WHILE boolexp whileup opensc closed_statement whiledown closesc 
+ELSE opensc open_statement closesc {
+}
+;
+
+closed_statement:
+simple_statement
+| IF boolexp opensc closed_statement closesc ELSE
+opensc closed_statement closesc	{
+	
+
+}
+
+| WHILE boolexp whileup opensc closed_statement whiledown closesc {
+	
+
+}
+
+| WHILE boolexp whileup opensc closed_statement whiledown closesc 
+ELSE opensc closed_statement closesc {
+}
+;
+
+
+simple_statement:
+LBRACE  opensc statements  RBRACE closesc
+
+|type ID SC {
+    Id* tmp= dynamic_cast<Id*>($2);
+    if(sTable.isExist($2)) {
+        output::errorDef(yylineno,tmp->id);
+        exit(0);
+    }
+    sTable.addID($1->type,$2);
+}
+
+|type ID ASSIGN exp SC {
+    Id* tmp= dynamic_cast<Id*>($2);
+    if(sTable.isExist($2)) {
+        output::errorDef(yylineno,tmp->id);
+        exit(0);
+    }
+    if(!($1->type==INTT&&$4->type==BYTEE)&&($1->type!=$4->type)){
+    output::errorMismatch(yylineno);
+    exit(0);
+    }
+    sTable.addID($1->type,$2);
+}
+
+|ID ASSIGN exp SC{
+    if(!sTable.isExist($1)){
+        Id* tmp= dynamic_cast<Id*>($1);
+        output::errorUndef(yylineno, tmp->id);
+        exit(0);
+    }
+    scopeVal sv=sTable.search($1);
+    if(sv.Function){
+        output::errorUndef(yylineno, sv.name);
+        exit(0);
+    }
+    if(!(sv.type==INTT && $3->type==BYTEE)&&(sv.type!=$3->type)) {
+        output::errorMismatch(yylineno);
+        exit(0);
+    }
+}
+
+|call SC {}
+
+|RETURN SC{
+    if(sTable.ScopeRetType()!=VOIDD) {
+        output::errorMismatch(yylineno);
+        exit(0);
+    }
+}
+
+|RETURN exp SC {
+    TType t=sTable.ScopeRetType();
+    if(((t!=$2->type)&&!(t==INTT&&$2->type==BYTEE))||sTable.currRetType == VOIDD){
+        output::errorMismatch(yylineno);
+        exit(0);
+    }
+}
+
+|BREAK SC{
+    if(!sTable.whileNum) {
+        output::errorUnexpectedBreak(yylineno);
+        exit(0);
+    }
+}
+|CONTINUE SC{
+    if(!sTable.whileNum) {
+        output::errorUnexpectedContinue(yylineno);
+        exit(0);
+    }
+}
+;
+
+
+call: ID LPAREN explist RPAREN {
+        Id* tmpId= dynamic_cast<Id*>($1);
+        if(!sTable.isExist($1)) {
+            output::errorUndefFunc(yylineno,tmpId->id);
+            exit(0);
+        }
+        scopeVal sv=sTable.search($1);
+        if(!sv.Function)  {
+            output::errorUndefFunc(yylineno,tmpId->id);
+            exit(0);
+        }
+    Explist* tmp=dynamic_cast<Explist*>($3);
+    if(sTable.checkArg(sv.argTypes,tmp->vec)){
+        vector<string> vec= sTable.argToString(sv.argTypes);
+        output::errorPrototypeMismatch(yylineno,sv.name,vec);
+        exit(0);
+    }
+    if(sv.retType == INTT) $$=new Num(0,INTT);
+    else if(sv.retType == BYTEE) $$=new Num(0,BYTEE);
+    else if(sv.retType == STRINGG) $$=new String();
+    else if(sv.retType == VOIDD) $$=new Void();
+    else $$=new Bool();
+}
+
+|ID LPAREN RPAREN{
+        Id* tmpId= dynamic_cast<Id*>($1);
+        if(!sTable.isExist($1)) {
+            output::errorUndefFunc(yylineno,tmpId->id);
+            exit(0);
+        }
+        scopeVal sv=sTable.search($1);
+        if(!sv.Function)  {
+            output::errorUndefFunc(yylineno,tmpId->id);
+            exit(0);
+        }
+    if(sv.argTypes!=vector<TType>()){
+        vector<string> v;
+        output::errorPrototypeMismatch(yylineno,sv.name,v);
+        exit(0);
+    }
+    if(sv.retType == INTT) $$=new Num(0,INTT);
+    else if(sv.retType == BYTEE) $$=new Num(0,BYTEE);
+    else if(sv.retType == STRINGG) $$=new String();
+    else if(sv.retType == VOIDD) $$=new Void();
+    else $$=new Bool();
+}
+;
+
+explist:
+exp{$$=new Explist($1->type);}
+|exp COMMA explist{
+    Explist* tmp=dynamic_cast<Explist*>($3);
+    tmp->insert($1->type);
+    $$=$3;
+}
+;
+
+type:  INT{$$=new Type(INTT);}
+                |BYTE{$$=new Type(BYTEE);}
+                |BOOL{$$=new Type(BOOLL);}
+;
+
+exp:
+
+LPAREN exp RPAREN {$$=$2;}
+
+|exp BINOPADD exp {
+    Num* e1=dynamic_cast<Num*>($1);
+    Num* e2=dynamic_cast<Num*>($3);
+    if(e1==NULL||e2==NULL) {
+        output::errorMismatch(yylineno);
+        exit(0);
+    }
+    if(e1->type>e2->type)
+    $$=new Num(e1->value,e1->type);
+    else
+    $$=new Num(e2->value,e2->type);
+}
+
+|exp BINOPMUL exp {
+    Num* e1=dynamic_cast<Num*>($1);
+    Num* e2=dynamic_cast<Num*>($3);
+    if(e1==NULL||e2==NULL) {
+        output::errorMismatch(yylineno);
+        exit(0);
+    }
+    if(e1->type>e2->type)
+    $$=new Num(e1->value,e1->type);
+    else
+    $$=new Num(e2->value,e2->type);
+}
+
+|ID {//----------------------------------------
+    Id* tmp= dynamic_cast<Id*>($1);
+    if(!sTable.isExist($1)){
+        output::errorUndef(yylineno, tmp->id);
+        exit(0);
+    }
+    scopeVal sv=sTable.search($1);
+    if(sv.type==INTT||sv.type==BYTEE) $$=new Num(0,sv.type);
+    else if(sv.type == BOOLL)  $$=new Bool();
+    else{
+        output::errorMismatch(yylineno);
+        exit(0);
+    }
+}
+|call {$$=$1;}
+|NUM {
+    Num* tmp=dynamic_cast<Num*>($1);
+    $$=new Num(tmp->value,INTT);
+}
+
+|NUM B{
+    Num* tmp=dynamic_cast<Num*>($1);
+    if(tmp->value>255) {
+        output::errorByteTooLarge(yylineno,func::IntToString( tmp->value));
+        exit(0);
+    }
+    $$=new Num(tmp->value,BYTEE);
+}
+
+|STRING{$$=new String();}
+
+|TRUE{$$ =new Bool();}
+
+|FALSE{$$ =new Bool();}
+
+|NOT exp{
+    Bool* e1=dynamic_cast<Bool*>($2);
+    if(e1==NULL) {
+        output::errorMismatch(yylineno);
+        exit(0);
+    }
+    $$=new Bool();
+}
+
+|exp AND exp {
+        Bool* e1=dynamic_cast<Bool*>($1);
+        Bool* e2=dynamic_cast<Bool*>($3);
+        if(e1==NULL||e2==NULL) {
+            output::errorMismatch(yylineno);
+            exit(0);
+        }
+        $$=new Bool();
+    }
+
+|exp OR exp {
+    Bool* e1=dynamic_cast<Bool*>($1);
+    Bool* e2=dynamic_cast<Bool*>($3);
+    if(e1==NULL||e2==NULL) {
+        output::errorMismatch(yylineno);
+        exit(0);
+    }
+    $$=new Bool();
+}
+
+|exp RELOPEQUALITY exp {
+        Num* e1=dynamic_cast<Num*>($1);
+        Num* e2=dynamic_cast<Num*>($3);
+        if(e1==NULL||e2==NULL) {
+            output::errorMismatch(yylineno);
+            exit(0);
+        }
+        $$=new Bool();
+    }
+    
+|exp  RELOPRELATION exp {
+    Num* e1=dynamic_cast<Num*>($1);
+    Num* e2=dynamic_cast<Num*>($3);
+    if(e1==NULL||e2==NULL) {
+        output::errorMismatch(yylineno);
+        exit(0);
+    }
+    $$=new Bool();
+}
+    ;
+
+
+opensc: {sTable.openScope();}
+;
+closesc: {
+     sTable.printScope();
+    sTable.closeScope();
+}
+;
+
+
+boolexp: LPAREN exp RPAREN{
+    Bool* tmp=dynamic_cast<Bool*>($2);
+    if(tmp == NULL) {
+        output::errorMismatch(yylineno);
+        exit(0);
+    }
+}
+;
+whileup: {sTable.whileNum++;}
+;
+whiledown: {sTable.whileNum--;}
+;
+
+
+%%
+    int main(){
+        return yyparse();
+    }
+    
+    int yyerror(const char* message)
+    {
+        output::errorSyn(yylineno);
+        exit(0);
+    }
+    
