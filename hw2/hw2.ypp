@@ -1,0 +1,60 @@
+%{
+	#include "attributes.h"
+	#include <iostream>
+	#include <stdlib.h>
+	typedef enum { OP_AND, OP_OR } opType;
+
+	using namespace std;
+
+	extern int yylex();
+	int yyerror(const char * message);
+%}
+
+%token tklp tkrp
+%token<constVal> tkconst
+%left tkor
+%left tkand
+%left tkadd
+%left tksub
+%left tkmul
+%left tkdiv
+
+%type<program>		Program
+%type<funcs>		Funcs
+%type<funcdecl>		FuncDecl
+%type<exp>			Exp
+%type<statement>	Statement
+%type<rettype>		RetType
+
+
+
+%%
+
+S	:	Exp
+		{
+			cout<<"The expression's value is "<<$1.value<<endl;
+		}
+	;
+
+Exp	:	Exp tkand Exp { $$.value = $1.value && $3.value; }
+	|	Exp tkor Exp { $$.value = $1.value || $3.value; }
+	|	Exp tkadd Exp { $$.value = $1.value + $3.value; }
+	|	Exp tksub Exp { $$.value = $1.value - $3.value; }
+	|	Exp tkmul Exp { $$.value = $1.value * $3.value; }
+	|	Exp tkdiv Exp { $$.value = $1.value / $3.value; }
+	|	tklp Exp tkrp { $$ = $2; }
+	|	tkconst	{ $$.value = $1; }
+	;
+
+%%
+
+int main()
+{
+	yyparse();
+}
+
+int yyerror(const char * message)
+{
+	cout<<"Parse error: "<<message<<endl;
+	exit(0);
+}

@@ -1,0 +1,155 @@
+%{
+	#include "attributes.h"
+	#include <iostream>
+	#include <stdlib.h>
+	#include "output.hpp"
+	#include <sstream>
+
+	using namespace output;
+	
+	extern int yylex();
+	extern int yylineno;
+	int yyerror(const char * message);
+%}
+
+%left tk_void
+%left tk_int
+%left tk_byte
+%left tk_b
+%left tk_bool
+%left tk_and
+%left tk_or
+%left tk_not
+%token tk_true
+%token tk_false
+%token tk_return
+%left tk_if
+%left tk_else
+%left tk_while
+%token tk_break
+%token tk_continue
+%token tk_sc
+%left tk_comma
+%token tk_lparen tk_rparen
+%token tk_lbrace tk_rbrace
+%left tk_assign
+%left tk_relop
+%left tk_binop
+%token tk_id
+%token tk_num
+%token tk_string
+
+
+%type<program>		Program
+%type<funcs>		Funcs
+%type<funcdecl>		FuncDecl
+%type<rettype>		RetType
+%type<formals>		Formals
+%type<formalslist>	FormalsList
+%type<formaldecl>	FormalDecl
+%type<statements>	Statements
+%type<statement>	Statement
+%type<call>			Call
+%type<explist>		ExpList
+%type<type>			Type
+%type<exp>			Exp
+%type<expterm>		ExpTerm
+
+
+%%
+
+Program : Funcs																		{ printProductionRule(1); }
+		;
+
+Funcs : FuncDecl Funcs																{ printProductionRule(3); }
+	  | 																			{ printProductionRule(2); }
+	  ;
+	
+FuncDecl : RetType tk_id tk_lparen Formals tk_rparen tk_lbrace Statements tk_rbrace	{ printProductionRule(4); }
+		 ;	
+
+RetType : tk_void																	{ printProductionRule(6); }
+		| Type																		{ printProductionRule(5); }
+		;
+		
+Formals : FormalsList																{ printProductionRule(8); }
+		| 																			{ printProductionRule(7); }
+		;					
+
+FormalsList : FormalDecl tk_comma FormalsList										{ printProductionRule(10); }
+			| FormalDecl															{ printProductionRule(9); }
+			;					
+		
+FormalDecl : Type tk_id																{ printProductionRule(11); }
+		   ;	
+
+Statements : Statements Statement													{ printProductionRule(13); }
+		   | Statement																{ printProductionRule(12); } 
+		   ;		
+				
+Statement :	tk_continue tk_sc														{ printProductionRule(26); }
+		  |	tk_break tk_sc															{ printProductionRule(25); }
+		  |	tk_while tk_lparen Exp tk_rparen Statement tk_else Statement			{ printProductionRule(24); }
+		  |	tk_while tk_lparen Exp tk_rparen Statement								{ printProductionRule(23); }
+		  |	tk_if tk_lparen Exp tk_rparen Statement	tk_else Statement				{ printProductionRule(22); }
+		  |	tk_if tk_lparen Exp tk_rparen Statement									{ printProductionRule(21); }
+		  |	tk_return Exp tk_sc														{ printProductionRule(20); }
+		  |	tk_return tk_sc															{ printProductionRule(19); }
+		  |	Call tk_sc																{ printProductionRule(18); }
+		  |	tk_id tk_assign Exp tk_sc												{ printProductionRule(17); }
+		  |	Type tk_id tk_assign Exp tk_sc											{ printProductionRule(16); }
+		  |	Type tk_id tk_sc														{ printProductionRule(15); }
+		  |	tk_lbrace Statements tk_rbrace											{ printProductionRule(14); }
+		  ;		
+			
+Call : tk_id tk_lparen tk_rparen													{ printProductionRule(28); }
+     | tk_id tk_lparen ExpList tk_rparen											{ printProductionRule(27); }
+	 ;										
+
+ExpList : Exp tk_comma ExpList														{ printProductionRule(30); }
+		| Exp 																		{ printProductionRule(29); }
+		;												
+				
+
+Exp	: Exp tk_relop Exp 																{ printProductionRule(46); }
+	| Exp tk_relop ExpTerm 															{ printProductionRule(46); }
+	| Exp tk_or Exp 																{ printProductionRule(45); }
+	| Exp tk_or ExpTerm 															{ printProductionRule(45); }
+	| Exp tk_and Exp 																{ printProductionRule(44); }
+	| Exp tk_and ExpTerm 															{ printProductionRule(44); }
+	| tk_not Exp 																	{ printProductionRule(43); }
+	| tk_not ExpTerm 																{ printProductionRule(43); }
+	| Call																			{ printProductionRule(37); }
+	| tk_id																			{ printProductionRule(36); }
+	| Exp tk_binop Exp 																{ printProductionRule(35); }
+	| Exp tk_binop ExpTerm 															{ printProductionRule(35); }
+	| tk_lparen Exp tk_rparen 														{ printProductionRule(34); }
+	| ExpTerm										
+	;										
+
+ExpTerm : tk_false 																	{ printProductionRule(42); }
+		| tk_true 																	{ printProductionRule(41); }
+		| tk_string 																{ printProductionRule(40); }
+		| tk_num tk_b																{ printProductionRule(39); }
+		| tk_num																	{ printProductionRule(38); }
+		;
+		
+Type : tk_bool																		{ printProductionRule(33); }
+	 | tk_byte																		{ printProductionRule(32); }
+	 | tk_int																		{ printProductionRule(31); }
+	 ;										
+	 
+	 
+
+%%
+
+int main()
+{
+	yyparse();
+}
+
+int yyerror(const char * message)
+{
+	errorSyn(yylineno);
+	exit(0);
+}
