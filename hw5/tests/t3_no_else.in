@@ -1,0 +1,25 @@
+void explainWhileElse(int x) {
+	int cnt = 0;
+	while(cnt < x){ 
+		printi(cnt);
+		cnt = cnt + 1;
+		if(cnt == 5) {
+			break;
+		}
+	}
+	
+	while(cnt < x){ 
+		printi(cnt);
+		cnt = cnt + 1;
+		if(cnt == 5) {
+			break;
+		}
+	}
+
+}
+
+void main()
+{
+	int x = 7;
+	explainWhileElse(x);
+}

@@ -1,0 +1,202 @@
+%{
+	// C++ user declarations
+	#include "sematic_aid.hpp"
+	#include <iostream>
+	#include <stdlib.h>
+	#include "output.hpp"
+	#include "SymbolTable.hpp"
+	#include "RegAllocator.hpp"
+	#include "MemoryManager.hpp"
+	#include "bp.hpp"
+
+
+	using namespace std;
+	using namespace output;
+
+	extern int yylineno;
+  	extern char* yytext;
+	extern int yylex();
+
+	void yyerror(const char*);
+
+	SymbolTable symbol_table;
+	RegAllocator reg_allocator;
+	int in_while_count;
+
+
+	MemoryManager memory_manager = MemoryManager();
+
+	CodeBuffer& code_buffer = CodeBuffer::instance();
+
+
+%}
+
+%token	VOID
+%token	INT
+%token	BYTE
+%token	B
+%token	BOOL
+%token	TRUE
+%token	FALSE
+%token	ID
+%token	NUM
+%token	STRING
+
+%left	OR
+%left	AND
+
+%left	RELOP_EQ
+%nonassoc	RELOP_OTHER
+
+%left	BINOP_PLUS
+%left	BINOP_MULT
+
+%token	SC
+%token	COMMA
+%left	LPAREN
+%left	RPAREN
+%left	LBRACE
+%left	RBRACE
+%right	ASSIGN
+
+%token	RETURN
+%token	IF
+%nonassoc	ELSE
+%token	WHILE
+%token	BREAK
+%token	CONTINUE
+
+%right	NOT
+
+
+
+%%
+	// rules
+Program			:	Funcs {checkMainExistance(symbol_table);} deleteScope
+				;
+
+Funcs			:	FuncDecl Funcs 												{}
+				|   															{}
+				;
+
+FuncDecl		:
+					RetType ID
+
+					LPAREN
+						Formals
+					RPAREN
+						{EnterFunctionScope(symbol_table, $1, $2, reg_allocator, code_buffer);}
+					LBRACE
+						Statements
+					RBRACE
+						{ExitFunctionScope(symbol_table, reg_allocator, code_buffer, memory_manager);}
+				;
+
+RetType			:	Type 	{$$ = RetType_To_Type($1);}
+				|	VOID 	{$$ = RetType_To_VOID($1);}
+				;
+
+Formals			:																{}
+				|	FormalsList 												{}
+				;
+
+FormalsList		:	FormalDecl							{}
+				|	FormalDecl COMMA FormalsList		{}
+				;
+
+FormalDecl		:	Type ID 		{FormalDecl_To_Type_ID(symbol_table ,$1, $2);}
+				;
+
+Statements		:	Statement 													{}
+				|	Statements Statement 										{}
+				;
+
+Statement		:	LBRACE newScope Statements RBRACE deleteScope                       {$$ = new Node(); Statement01($1, $3, $4);}
+				|	Type ID SC 										{$$ = new Node(); Statement02(symbol_table, $1, $2, $3, code_buffer, reg_allocator, memory_manager);}
+				|	Type ID ASSIGN Exp SC 							{$$ = new Node(); Statement05(symbol_table, $1, $2, $3, $4, $5, code_buffer, reg_allocator, memory_manager);}
+				|	ID ASSIGN Exp SC 								{$$ = new Node(); Statement07(symbol_table, $1, $2, $3, $4, code_buffer, reg_allocator, memory_manager);}
+				|	Call SC 										{$$ = new Node(); Statement08($1, $2);}
+				|	RETURN SC 										{$$ = new Node(); Statement09(symbol_table, $1, $2);}
+				|	RETURN Exp SC 									{$$ = new Node(); Statement10(symbol_table, $1, $2, $3);}
+
+
+				|	IF_PREFIX RPAREN Statement deleteScope          {$$ = bp_if($1);}
+				|	IF_PREFIX RPAREN Statement deleteScope ELSE IF_M newScope Statement deleteScope {$$ = bp_if_else($1, $6);}
+
+
+				|	WHILE
+					LPAREN newScope          {enterWhile(in_while_count, $1);}
+					Exp                 {$5->nextInstr = $1->nextInstr; checkBOOLInIf($5);}
+					RPAREN
+					Statement deleteScope   {exitWhile(in_while_count, $5);}					
+				
+				|	BREAK SC 										{Statement14(in_while_count);}
+				|	CONTINUE SC 									{Statement15(in_while_count);}
+				;
+		
+
+IF_PREFIX		:	IF newScope LPAREN {code_buffer.emitCommand("","if start");} Exp  {$$ = checkBOOLInIf($5);}
+
+				;
+
+newScope        :               {symbol_table.NewScope(true);}
+				;
+
+deleteScope     :               {symbol_table.DestroyCurrentScope();}
+				;
+
+Call			:	ID LPAREN ExpList RPAREN 	{$$ = Call_With_Params(symbol_table, $1, $2, $3, $4);}
+				|	ID LPAREN RPAREN 			{$$ = Call_No_Params(symbol_table, $1, $2, $3);}
+				;
+
+ExpList			:	Exp 						{$1 = Deal_If_Bool($1); ExpList_To_Exp(symbol_table, $1);}
+				|	Exp {$1 = Deal_If_Bool($1);} COMMA ExpList { ExpList_To_Exp_Comma_Explist(symbol_table, $1, $3, $4);}
+				;
+
+Type			:	INT 	{$$ = Type_To_INT($1);}
+				|	BYTE 	{$$ = Type_To_BYTE($1);}
+				|	BOOL 	{$$ = Type_To_BOOL($1);}
+				;
+
+Exp				:	LPAREN Exp RPAREN 		{$$ = $2;}
+				|	Exp BINOP_PLUS Exp 		{$$ = Exp_To_Exp_Binop_Exp($1, $2, $3, reg_allocator, code_buffer);}
+				|	Exp BINOP_MULT Exp 		{$$ = Exp_To_Exp_Binop_Exp($1, $2, $3, reg_allocator, code_buffer);}
+				|	ID 						{$$ = Exp_To_ID(symbol_table, $1, reg_allocator, code_buffer);}
+				|	Call 					{$$ = Exp_To_Call($1);}
+				|	NUM 					{$$ = Exp_To_NUM($1, reg_allocator, code_buffer);}
+				|	NUM B 					{$$ = Exp_To_NUM_B($1, $2, reg_allocator, code_buffer);}
+				|	STRING 					{$$ = Exp_To_STRING($1);}
+				|	TRUE 					{$$ = Exp_To_TRUE($1);}
+				|	FALSE 					{$$ = Exp_To_FALSE($1);}
+				|	NOT Exp 				{$$ = Exp_To_NOT_Exp($1, $2);}
+				|	Exp AND     {AND_OR($1, $2);}   Exp		{$$ = Exp_AND_Exp($1, $2, $4);}
+				|	Exp OR      {AND_OR($1, $2);}   Exp		{$$ = Exp_OR_Exp($1, $2, $4);}
+				|	Exp RELOP_EQ Exp    	{$$ = Exp_RELOP_Exp($1, $2, $3);}
+				|	Exp RELOP_OTHER Exp	    {$$ = Exp_RELOP_Exp($1, $2, $3);}
+				;
+
+
+IF_M            :                           {$$ = new Node();
+                                             code_buffer.emitCommand("","true block end");
+                                             int loc = code_buffer.emit("\tbr label @");
+                                             code_buffer.emitCommand("","false block start");
+                                             $$->nextInstr = code_buffer.genLabel();
+                                             $$->next_list = code_buffer.makelist({loc, FIRST});}
+                ;
+
+
+%%
+
+int main(){
+    
+	yyparse();
+	reg_allocator = RegAllocator();
+
+	code_buffer.printCodeBuffer();
+	code_buffer.printGlobalBuffer();
+}
+
+void yyerror(const char*){
+	errorSyn(yylineno);
+	exit(0);
+}
