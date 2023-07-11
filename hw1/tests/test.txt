@@ -1,0 +1,25 @@
+
+56468
+
+"hello"
+
+/* sdopfjsdpfj 
+
+THIS IS A GOOD COMMENT
+asasdalj;sd
+
+aslda
+*/
+
+90457024
+
+0b0101010
+
+0x42BC743
+
+/* alsdaksd
+alsdkasd;l
+THIS IS A BAD COMMENT
+
+asldka
+
